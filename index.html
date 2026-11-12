@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio & Truyện Online - YouTube Player</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #0f1117;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 440px;
+            background-color: #181b26;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #2a2f45;
+        }
+
+        /* Header */
+        .header {
+            padding: 18px 20px;
+            background-color: #1f2333;
+            border-bottom: 1px solid #2a2f45;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff334b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-badge {
+            background-color: rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            border: 1px solid rgba(46, 204, 113, 0.3);
+        }
+
+        /* Màn hình phát YouTube */
+        .player-screen {
+            position: relative;
+            height: 220px;
+            background-color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #youtube-player {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .player-overlay-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            padding: 15px;
+            pointer-events: none;
+        }
+
+        .now-playing-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .now-playing-subtitle {
+            font-size: 11px;
+            color: #a0aab5;
+            margin-top: 2px;
+        }
+
+        /* Danh sách phát */
+        .playlist-container {
+            max-height: 240px;
+            overflow-y: auto;
+            background-color: #141721;
+            padding: 10px;
+        }
+
+        .playlist-container::-webkit-scrollbar {
+            width: 5px;
+        }
+        .playlist-container::-webkit-scrollbar-thumb {
+            background-color: #2a2f45;
+            border-radius: 10px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #8c96a5;
+            text-transform: uppercase;
+            padding: 6px 10px;
+            letter-spacing: 1px;
+        }
+
+        .track-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-bottom: 4px;
+        }
+
+        .track-item:hover {
+            background-color: #1f2333;
+        }
+
+        .track-item.active {
+            background-color: #2a2f45;
+            border-left: 4px solid #ff334b;
+        }
+
+        .track-thumb {
+            width: 50px;
+            height: 38px;
+            background-color: #2a2f45;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+
+        .track-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .track-name {
+            font-size: 13px;
+            font-weight: bold;
+            color: #fff;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .track-author {
+            font-size: 11px;
+            color: #8c96a5;
+        }
+
+        /* Ô tìm kiếm / dán link YouTube */
+        .search-box-container {
+            display: flex;
+            gap: 8px;
+            padding: 10px 20px;
+            background-color: #141721;
+            border-top: 1px solid #2a2f45;
+        }
+
+        .search-input {
+            flex: 1;
+            background-color: #1f2333;
+            border: 1px solid #2a2f45;
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: #ff334b;
+        }
+
+        .search-btn {
+            background-color: #ff334b;
+            border: none;
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .search-btn:hover {
+            background-color: #e0283f;
+        }
+
+        /* Bảng điều khiển */
+        .controls-panel {
+            padding: 12px 20px;
+            background-color: #181b26;
+            border-top: 1px solid #2a2f45;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .control-buttons {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #24293d;
+            transition: background-color 0.2s;
+        }
+
+        .control-btn:hover {
+            background-color: #323852;
+        }
+
+        .control-btn.play-pause {
+            background-color: #ff334b;
+            font-size: 22px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <div class="logo">
+            <span>🎧</span> Radio & Truyện Online
+        </div>
+        <div class="status-badge" id="statusBadge">Sẵn sàng</div>
+    </div>
+
+    <div class="player-screen">
+        <div id="player"></div>
+        <div class="player-overlay-info">
+            <div class="now-playing-title" id="currentTitle">Chọn kênh hoặc dán link YouTube bên dưới</div>
+            <div class="now-playing-subtitle" id="currentAuthor">Nguồn YouTube</div>
+        </div>
+    </div>
+
+    <div class="playlist-container" id="playlistContainer">
+        <div class="section-title">Danh sách kênh & truyện</div>
+    </div>
+
+    <!-- Ô nhập link hoặc từ khóa YouTube -->
+    <div class="search-box-container">
+        <input type="text" id="youtubeInput" class="search-input" placeholder="Dán link YouTube hoặc chọn kênh sẵn có..." onkeypress="if(event.key === 'Enter') handleYouTubeInput()">
+        <button class="search-btn" onclick="handleYouTubeInput()">Phát</button>
+    </div>
+
+    <div class="controls-panel">
+        <div class="control-buttons">
+            <button class="control-btn" onclick="prevTrack()" title="Bài trước">⏮</button>
+            <button class="control-btn play-pause" id="playPauseBtn" onclick="togglePlayPause()" title="Phát/Tạm dừng">▶</button>
+            <button class="control-btn" onclick="nextTrack()" title="Bài tiếp">⏭</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<script>
+    // Danh sách kênh & truyện chuẩn trực tiếp từ YouTube
+    let playlist = [
+        {
+            id: "jfKfPfyJRdk",
+            title: "Lofi Girl - Lofi Hip Hop Radio 24/7",
+            author: "Lofi Girl",
+            thumb: "https://img.youtube.com/vi/jfKfPfyJRdk/hqdefault.jpg"
+        },
+        {
+            id: "1fueZCTYkpA",
+            title: "Tuyển Tập Truyện Ngắn Hay Nhất - Đọc Truyện Đêm Khuya",
+            author: "Kênh Truyện Audio",
+            thumb: "https://img.youtube.com/vi/1fueZCTYkpA/hqdefault.jpg"
+        },
+        {
+            id: "5qap5aO4i9A",
+            title: "Lofi Hip Hop Beats - Sleep / Chill Music",
+            author: "Lofi Records",
+            thumb: "https://img.youtube.com/vi/5qap5aO4i9A/hqdefault.jpg"
+        },
+        {
+            id: "1ZYbU82GVz4",
+            title: "Nhạc Thiền Tịnh Tâm - Thư Giãn Giảm Stress",
+            author: "Zen Meditation",
+            thumb: "https://img.youtube.com/vi/1ZYbU82GVz4/hqdefault.jpg"
+        }
+    ];
+
+    let currentIndex = 0;
+    let player;
+    let isPlaying = false;
+
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+            height: '100%',
+            width: '100%',
+            videoId: playlist[0].id,
+            playerVars: {
+                'playsinline': 1,
+                'controls': 0,
+                'disablekb': 1,
+                'fs': 0
+            },
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange
+            }
+        });
+    }
+
+    function onPlayerReady(event) {
+        renderPlaylist();
+        updateMetadata(0);
+    }
+
+    function onPlayerStateChange(event) {
+        const statusBadge = document.getElementById('statusBadge');
+        const playBtn = document.getElementById('playPauseBtn');
+
+        if (event.data == YT.PlayerState.PLAYING) {
+            isPlaying = true;
+            statusBadge.innerText = "Đang phát";
+            statusBadge.style.color = "#2ecc71";
+            playBtn.innerText = "⏸";
+        } else if (event.data == YT.PlayerState.PAUSED || event.data == YT.PlayerState.ENDED) {
+            isPlaying = false;
+            statusBadge.innerText = "Tạm dừng";
+            statusBadge.style.color = "#f39c12";
+            playBtn.innerText = "▶";
+            if (event.data == YT.PlayerState.ENDED) {
+                nextTrack();
+            }
+        }
+    }
+
+    function renderPlaylist() {
+        const container = document.getElementById('playlistContainer');
+        let html = '<div class="section-title">Danh sách kênh & truyện</div>';
+
+        playlist.forEach((item, index) => {
+            html += `
+                <div class="track-item ${index === currentIndex ? 'active' : ''}" onclick="selectTrack(${index})">
+                    <img src="${item.thumb}" class="track-thumb" alt="Thumbnail">
+                    <div class="track-info">
+                        <div class="track-name">${item.title}</div>
+                        <div class="track-author">${item.author}</div>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function selectTrack(index) {
+        currentIndex = index;
+        player.loadVideoById(playlist[currentIndex].id);
+        updateMetadata(currentIndex);
+        renderPlaylist();
+    }
+
+    function updateMetadata(index) {
+        document.getElementById('currentTitle').innerText = playlist[index].title;
+        document.getElementById('currentAuthor').innerText = playlist[index].author;
+    }
+
+    function togglePlayPause() {
+        if (!player) return;
+        if (isPlaying) {
+            player.pauseVideo();
+        } else {
+            player.playVideo();
+        }
+    }
+
+    function nextTrack() {
+        currentIndex = (currentIndex + 1) % playlist.length;
+        selectTrack(currentIndex);
+    }
+
+    function prevTrack() {
+        currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+        selectTrack(currentIndex);
+    }
+
+    // Xử lý khi người dùng dán link YouTube hoặc nhập từ khóa
+    function handleYouTubeInput() {
+        let inputVal = document.getElementById('youtubeInput').value.trim();
+        if (!inputVal) return;
+
+        let videoId = extractYouTubeId(inputVal);
+        if (videoId) {
+            // Nếu là link YouTube hợp lệ, thêm vào đầu danh sách và phát luôn
+            playlist.unshift({
+                id: videoId,
+                title: "Video YouTube (" + videoId + ")",
+                author: "Tùy chỉnh",
+                thumb: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+            });
+            currentIndex = 0;
+            player.loadVideoById(videoId);
+            renderPlaylist();
+            updateMetadata(0);
+        } else {
+            alert("Vui lòng dán đúng link video YouTube (VD: https://www.youtube.com/watch?v=...)");
+        }
+        document.getElementById('youtubeInput').value = '';
+    }
+
+    function extractYouTubeId(url) {
+        let regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        let match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : (url.length === 11 ? url : null);
+    }
+</script>
+
+</body>
+</html>
